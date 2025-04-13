@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import nckh.Element;
+import nckh.UtilityList;
+import nckh.MemoryLogger;
 
 /**
  * A simple implementation of the TKO algorithm without some of the
@@ -82,9 +85,9 @@ public class AlgoTKO_Basic {
     /**
      * Run the algorithm
      *
-     * @param input the input file path
+     * @param input  the input file path
      * @param output the output file path
-     * @param k the parameter k
+     * @param k      the parameter k
      * @throws IOException if an error occur for reading/writing to file.
      */
     public void runAlgorithm(String input, String output, int k, int length_max, int length_min)
@@ -104,7 +107,7 @@ public class AlgoTKO_Basic {
             myInput = new BufferedReader(new InputStreamReader(fin));
             // for each line (transaction)
             while ((thisLine = myInput.readLine()) != null) {
-                // if the line is  a comment, is  empty or is a
+                // if the line is a comment, is empty or is a
                 // kind of metadata
                 if (thisLine.isEmpty() == true || thisLine.charAt(0) == '#'
                         || thisLine.charAt(0) == '%'
@@ -123,8 +126,9 @@ public class AlgoTKO_Basic {
                     // get the current TWU
                     Integer twu = mapItemToTWU.get(item);
                     // update the twu
-                    twu = (twu == null) ? transactionUtility : twu
-                            + transactionUtility;
+                    twu = (twu == null) ? transactionUtility
+                            : twu
+                                    + transactionUtility;
                     mapItemToTWU.put(item, twu);
                 }
             }
@@ -172,7 +176,7 @@ public class AlgoTKO_Basic {
             int tid = 0;
             // for each line (transaction)
             while ((thisLine = myInput.readLine()) != null) {
-                // if the line is  a comment, is  empty or is a
+                // if the line is a comment, is empty or is a
                 // kind of metadata
                 if (thisLine.isEmpty() == true || thisLine.charAt(0) == '#'
                         || thisLine.charAt(0) == '%'
@@ -234,7 +238,7 @@ public class AlgoTKO_Basic {
             }
         }
 
-//		System.out.println(minutility);
+        // System.out.println(minutility);
         // check the memory usage
         MemoryLogger.getInstance().checkMemory();
 
@@ -250,11 +254,11 @@ public class AlgoTKO_Basic {
      * This is the recursive method to find all high utility itemsets. It writes
      * the itemsets to the output file.
      *
-     * @param prefix This is the current prefix. Initially, it is empty.
-     * @param pUL This is the Utility List of the prefix. Initially, it is
-     * empty.
-     * @param ULs The utility lists corresponding to each extension of the
-     * prefix.
+     * @param prefix     This is the current prefix. Initially, it is empty.
+     * @param pUL        This is the Utility List of the prefix. Initially, it is
+     *                   empty.
+     * @param ULs        The utility lists corresponding to each extension of the
+     *                   prefix.
      * @param minUtility The minUtility threshold.
      * @throws IOException
      */
@@ -269,7 +273,7 @@ public class AlgoTKO_Basic {
             // If pX is a high utility itemset.
             // we save the itemset: pX
             if (X.sumIutils >= minutility) {
-                writeOut(prefix, X.item, X.sumIutils, length_min, length_max);
+                writeOut(prefix, X.item, X.sumIutils);
             }
 
             // If the sum of the remaining utilities for pX
@@ -293,23 +297,23 @@ public class AlgoTKO_Basic {
 
                 // We make a recursive call to discover all itemsets with the
                 // prefix pX
-                search(newPrefix, X, exULs, length_min, length_max);
+                if (newPrefix.length < length_max) {
+                    search(newPrefix, X, exULs, length_min, length_max);
+                }
             }
-
         }
     }
 
     /**
      * Method to write a high utility itemset to the output file.
      *
-     * @param a prefix itemset
-     * @param an item to be appended to the prefix
+     * @param a       prefix itemset
+     * @param an      item to be appended to the prefix
      * @param utility the utility of the prefix concatenated with the item
      */
-    private void writeOut(int[] prefix, int item, long utility, int length_min, int length_max) { //ab
+    private void writeOut(int[] prefix, int item, long utility) {
 		ItemsetTKO itemset = new ItemsetTKO(prefix, item, utility);
-                if(prefix.length>=length_min-1&&prefix.length<=length_max-1){
-                    kItemsets.add(itemset);
+		kItemsets.add(itemset);
 		if (kItemsets.size() > k) {
 			if (utility > this.minutility) {
 				ItemsetTKO lower;
@@ -324,14 +328,12 @@ public class AlgoTKO_Basic {
 //				System.out.println(this.minutility);
 			}
 		}
-                }
-		
 	}
 
     /**
      * This method constructs the utility list of pXY
      *
-     * @param P : the utility list of prefix P.
+     * @param P  : the utility list of prefix P.
      * @param px : the utility list of pX
      * @param py : the utility list of pY
      * @return the utility list of pXY
@@ -373,13 +375,13 @@ public class AlgoTKO_Basic {
      * Do a binary search to find the element with a given tid in a utility list
      *
      * @param ulist the utility list
-     * @param tid the tid
+     * @param tid   the tid
      * @return the element or null if none has the tid.
      */
     private Element findElementWithTID(UtilityList ulist, int tid) {
         List<Element> list = ulist.elements;
 
-        // perform a binary search to check if  the subset appears in  level k-1.
+        // perform a binary search to check if the subset appears in level k-1.
         int first = 0;
         int last = list.size() - 1;
 
@@ -388,9 +390,10 @@ public class AlgoTKO_Basic {
             int middle = (first + last) >>> 1; // divide by 2
 
             if (list.get(middle).tid < tid) {
-                first = middle + 1;  //  the itemset compared is larger than the subset according to the lexical order
+                first = middle + 1; // the itemset compared is larger than the subset according to the lexical order
             } else if (list.get(middle).tid > tid) {
-                last = middle - 1; //  the itemset compared is smaller than the subset  is smaller according to the lexical order
+                last = middle - 1; // the itemset compared is smaller than the subset is smaller according to the
+                                   // lexical order
             } else {
                 return list.get(middle);
             }
@@ -445,7 +448,7 @@ public class AlgoTKO_Basic {
                 .println("=============  TKO-BASIC - v.2.28 =============");
         System.out
                 .println(" High-utility itemsets count : " + kItemsets.size());
-        for(ItemsetTKO itemset: kItemsets){
+        for (ItemsetTKO itemset : kItemsets) {
             System.out.println(itemset.toString());
         }
         System.out.println(" Total time ~ " + totalTime
